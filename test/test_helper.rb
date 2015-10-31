@@ -14,14 +14,14 @@ OmniAuth.config.test_mode = true
 
 class StrategyTestCase < MiniTest::Test
   class DummyApp
-    def call(env); end
+    def call(_env); end
   end
 
   attr_accessor :identifier, :secret
 
   def setup
-    @identifier = "1234"
-    @secret = "1234asdgat3"
+    @identifier = '1234'
+    @secret = '1234asdgat3'
   end
 
   def client
@@ -37,9 +37,9 @@ class StrategyTestCase < MiniTest::Test
       preferred_username: Faker::Internet.user_name,
       given_name: Faker::Name.first_name,
       family_name: Faker::Name.last_name,
-      picture: Faker::Internet.url + ".png",
+      picture: Faker::Internet.url + '.png',
       phone_number: Faker::PhoneNumber.phone_number,
-      website: Faker::Internet.url,
+      website: Faker::Internet.url
     )
   end
 

@@ -2,15 +2,15 @@ require_relative '../../../test_helper'
 
 class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
   def test_client_options_defaults
-    assert_equal "https", strategy.options.client_options.scheme
+    assert_equal 'https', strategy.options.client_options.scheme
     assert_equal 443, strategy.options.client_options.port
-    assert_equal "/authorize", strategy.options.client_options.authorization_endpoint
-    assert_equal "/token", strategy.options.client_options.token_endpoint
+    assert_equal '/authorize', strategy.options.client_options.authorization_endpoint
+    assert_equal '/token', strategy.options.client_options.token_endpoint
   end
 
   def test_request_phase
     expected_redirect = /^https:\/\/example\.com\/authorize\?client_id=1234&nonce=[\w\d]{32}&response_type=code&scope=openid$/
-    strategy.options.client_options.host = "example.com"
+    strategy.options.client_options.host = 'example.com'
     strategy.expects(:redirect).with(regexp_matches(expected_redirect))
     strategy.request_phase
   end
@@ -21,8 +21,8 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
 
   def test_callback_phase(session = {}, params = {})
     code = SecureRandom.hex(16)
-    request.stubs(:params).returns({"code" => code}.merge(params))
-    request.stubs(:path_info).returns("")
+    request.stubs(:params).returns({ 'code' => code }.merge(params))
+    request.stubs(:path_info).returns('')
 
     strategy.unstub(:user_info)
     access_token = stub('OpenIDConnect::AccessToken')
@@ -30,7 +30,7 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
     client.expects(:access_token!).returns(access_token)
     access_token.expects(:userinfo!).returns(user_info)
 
-    strategy.call!({"rack.session" => session})
+    strategy.call!('rack.session' => session)
     strategy.callback_phase
   end
 
@@ -60,13 +60,13 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
 
   def test_option_client_auth_method
     opts = strategy.options.client_options
-    opts[:host] = "foobar.com"
+    opts[:host] = 'foobar.com'
     strategy.options.client_auth_method = :not_basic
     success = Struct.new(:status).new(200)
 
     HTTPClient.any_instance.stubs(:post).with(
       "#{opts.scheme}://#{opts.host}:#{opts.port}#{opts.token_endpoint}",
-      {:grant_type => :client_credentials, :client_id => @identifier, :client_secret => @secret},
+      { grant_type: :client_credentials, client_id: @identifier, client_secret: @secret },
       {}
     ).returns(success)
     OpenIDConnect::Client.any_instance.stubs(:handle_success_response).with(success).returns(true)
@@ -77,45 +77,45 @@ class OmniAuth::Strategies::OpenIDConnectTest < StrategyTestCase
   def test_failure_endpoint_redirect
     OmniAuth.config.stubs(:failure_raise_out_environments).returns([])
     strategy.stubs(:env).returns({})
-    request.stubs(:params).returns({"error" => "access denied"})
+    request.stubs(:params).returns('error' => 'access denied')
 
     result = strategy.callback_phase
 
     assert(result.is_a? Array)
-    assert(result[0] == 302, "Redirect")
-    assert(result[1]["Location"] =~ /\/auth\/failure/)
+    assert(result[0] == 302, 'Redirect')
+    assert(result[1]['Location'] =~ /\/auth\/failure/)
   end
 
   def test_option_send_nonce
-    strategy.options.client_options[:host] = "foobar.com"
+    strategy.options.client_options[:host] = 'foobar.com'
 
-    assert(strategy.authorize_uri =~ /nonce=/, "URI must contain nonce")
+    assert(strategy.authorize_uri =~ /nonce=/, 'URI must contain nonce')
 
     strategy.options.send_nonce = false
-    assert(!(strategy.authorize_uri =~ /nonce=/), "URI must not contain nonce")
+    assert(!(strategy.authorize_uri =~ /nonce=/), 'URI must not contain nonce')
   end
 
   def test_state
-    strategy.options.state = lambda { 42 }
-    session = { "state" => 42 }
+    strategy.options.state = -> { 42 }
+    session = { 'state' => 42 }
 
     expected_redirect = /&state=/
-    strategy.options.client_options.host = "example.com"
+    strategy.options.client_options.host = 'example.com'
     strategy.expects(:redirect).with(regexp_matches(expected_redirect))
     strategy.request_phase
 
     # this should succeed as the correct state is passed with the request
-    test_callback_phase(session, { "state" => 42 })
+    test_callback_phase(session, 'state' => 42)
 
     # the following should fail because the wrong state is passed to the callback
     code = SecureRandom.hex(16)
-    request.stubs(:params).returns({"code" => code, "state" => 43})
-    request.stubs(:path_info).returns("")
-    strategy.call!({"rack.session" => session})
+    request.stubs(:params).returns('code' => code, 'state' => 43)
+    request.stubs(:path_info).returns('')
+    strategy.call!('rack.session' => session)
 
     result = strategy.callback_phase
 
-    assert result.kind_of?(Array)
-    assert result.first == 401, "Expecting unauthorized"
+    assert result.is_a?(Array)
+    assert result.first == 401, 'Expecting unauthorized'
   end
 end
